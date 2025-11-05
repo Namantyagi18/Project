@@ -164,4 +164,4 @@ elif page == "Paid Sessions":
             st.image(r"https://github.com/Namantyagi18/Project/blob/main/qr%20code.jpg", width=180, caption="Scan this Google Pay QR (₹100)")
             st.write("After payment, contact the facilitator to confirm your session timing.")
             if st.button(f"Contact {t['name']}", key=t['name']):
-                st.info(f"Contact {t['name']} at: +91-XXXXXXXXXX")
+                st.info(f"Contact {t['name']} at: +91-9627216110")
