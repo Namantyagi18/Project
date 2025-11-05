@@ -102,7 +102,7 @@ elif page == "Paid Sessions":
 
     for t in trainers:
         with st.expander(f"{t['name']} — {t['expertise']}"):
-            st.image("https://i.ibb.co/bmS7vF6/placeholder-qr.png", width=180, caption="Scan this Google Pay QR (₹100)")
+            st.image(r"C:\Users\Naman\Desktop\Project\qr code.jpg", width=180, caption="Scan this Google Pay QR (₹100)")
             st.write("After payment, contact the facilitator to confirm your session timing.")
 
-    st.warning("⚠️ This is a demo version — replace the placeholder QR with your actual Google Pay QR image.")
+   
