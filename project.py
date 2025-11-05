@@ -21,7 +21,7 @@ page = st.sidebar.radio(
         "Stress Relief Plans",
         "Paid Sessions",
     ],
-    key="main_nav"  # ✅ unique key prevents duplicate ID error
+    key="main_nav"
 )
 
 # ===============================================================
@@ -177,26 +177,136 @@ elif page == "Peer Support Circles":
                     st.warning("Please enter a valid name or you’re already in this circle.")
 
 # ===============================================================
-# 💖 PERSONALIZED STRESS RELIEF PLANS
+# 💖 AI-POWERED STRESS RELIEF PLANNER
 # ===============================================================
 elif page == "Stress Relief Plans":
-    st.header("💖 Personalized Stress Relief Plans")
-    st.write("Describe your stress and get a personalized plan 🌿")
+    st.header("💖 AI Stress Relief Planner")
+    st.write("✨ Get a personalized, actionable plan — whether it’s time, money, study, or emotional stress 🌿")
 
-    user_stress = st.text_area("💭 What's stressing you out today?")
-    if st.button("🌸 Generate My Plan"):
-        if not user_stress.strip():
-            st.warning("Please describe your stress first.")
+    user_stress = st.text_input("💭 What’s stressing you out today?",
+                                placeholder="e.g., time management, money problems, study pressure...")
+
+    if user_stress:
+        user_stress_lower = user_stress.lower()
+
+        # Detect stress type
+        if "time" in user_stress_lower:
+            stress_type = "time_management"
+            st.info("🕒 Detected stress type: Time Management")
+        elif "money" in user_stress_lower or "finance" in user_stress_lower:
+            stress_type = "money_management"
+            st.info("💰 Detected stress type: Money Management")
+        elif "study" in user_stress_lower or "exam" in user_stress_lower:
+            stress_type = "study_stress"
+            st.info("📚 Detected stress type: Study Stress")
+        elif "relationship" in user_stress_lower or "family" in user_stress_lower:
+            stress_type = "emotional_stress"
+            st.info("💞 Detected stress type: Emotional Stress")
         else:
-            text = user_stress.lower()
-            if "exam" in text or "study" in text:
-                st.info("🎓 Study Plan: Take 10-minute breaks, stay hydrated, and focus one topic at a time.")
-            elif "work" in text or "deadline" in text:
-                st.info("💼 Work Plan: Step away for 5 minutes, breathe deeply, and list top 3 priorities.")
-            elif "sleep" in text or "tired" in text:
-                st.info("🌙 Rest Plan: Turn off screens 30 minutes before bed and play calm music.")
-            else:
-                st.info("🌿 General Plan: Go for a short walk, breathe deeply, and write one good thing about today.")
+            stress_type = "general"
+            st.info("🌿 Detected stress type: General Stress")
+
+        st.divider()
+
+        # --- TIME MANAGEMENT PLAN ---
+        if stress_type == "time_management":
+            st.subheader("🕒 Build Your Day Plan")
+
+            hours = st.number_input("How many hours do you have today?", 1, 24, 10)
+            activities = st.text_area("List your activities (one per line):",
+                                      placeholder="e.g.\nStudy\nGym\nAssignments\nRelax\nDinner")
+            if st.button("✨ Generate My Time Schedule"):
+                if activities.strip():
+                    activity_list = [a.strip() for a in activities.split("\n") if a.strip()]
+                    priority = st.selectbox("Which is your top priority?", activity_list)
+                    time_per_activity = round(hours / len(activity_list), 1)
+
+                    plan = pd.DataFrame({
+                        "Activity": activity_list,
+                        "Allocated Time (hrs)": [time_per_activity] * len(activity_list),
+                        "Priority": ["⭐" if a == priority else "" for a in activity_list]
+                    })
+
+                    st.success("✅ Here's your balanced day plan:")
+                    st.dataframe(plan, use_container_width=True)
+
+                    csv = plan.to_csv(index=False).encode('utf-8')
+                    st.download_button("📥 Download Plan as CSV", csv, "day_plan.csv", "text/csv")
+
+        # --- MONEY MANAGEMENT PLAN ---
+        elif stress_type == "money_management":
+            st.subheader("💰 Build Your Budget Plan")
+
+            income = st.number_input("Enter your monthly income (₹):", min_value=0, step=1000)
+            essentials = st.slider("Essentials (rent, food, bills) %", 0, 100, 50)
+            savings = st.slider("Savings & Investments %", 0, 100, 20)
+            leisure = st.slider("Leisure & Others %", 0, 100, 15)
+
+            if st.button("✨ Generate My Budget Plan"):
+                other = 100 - (essentials + savings + leisure)
+                budget = pd.DataFrame({
+                    "Category": ["Essentials", "Savings", "Leisure", "Others"],
+                    "Percentage": [essentials, savings, leisure, other],
+                    "Amount (₹)": [
+                        income * essentials / 100,
+                        income * savings / 100,
+                        income * leisure / 100,
+                        income * other / 100
+                    ]
+                })
+
+                st.success("💡 Here’s your smart budget distribution:")
+                st.dataframe(budget, use_container_width=True)
+
+                csv = budget.to_csv(index=False).encode('utf-8')
+                st.download_button("📥 Download Budget as CSV", csv, "budget_plan.csv", "text/csv")
+
+        # --- STUDY STRESS PLAN ---
+        elif stress_type == "study_stress":
+            st.subheader("📚 Study Focus Plan")
+
+            total_hours = st.number_input("Total study hours available today:", 1, 24, 6)
+            subjects = st.text_area("Enter subjects or topics (one per line):",
+                                    placeholder="e.g.\nMath\nPhysics\nCoding")
+            if st.button("🧠 Generate Study Schedule"):
+                if subjects.strip():
+                    subject_list = [s.strip() for s in subjects.split("\n") if s.strip()]
+                    per_subject = round(total_hours / len(subject_list), 1)
+
+                    plan = pd.DataFrame({
+                        "Subject": subject_list,
+                        "Study Time (hrs)": [per_subject] * len(subject_list)
+                    })
+
+                    st.success("✅ Here’s your structured study plan:")
+                    st.dataframe(plan, use_container_width=True)
+
+                    csv = plan.to_csv(index=False).encode('utf-8')
+                    st.download_button("📥 Download Study Plan", csv, "study_plan.csv", "text/csv")
+
+        # --- EMOTIONAL STRESS PLAN ---
+        elif stress_type == "emotional_stress":
+            st.subheader("💞 Emotional Balance Plan")
+
+            st.markdown("""
+                - 🌤️ Start your day with 10 minutes of deep breathing  
+                - ✍️ Journal 3 thoughts or feelings without judgment  
+                - ☎️ Talk to one trusted person  
+                - 🌿 Go for a 15-minute walk without your phone  
+                - 💤 Sleep at least 7 hours tonight  
+            """)
+            st.info("💖 Remember: expressing emotions is a sign of strength, not weakness.")
+
+        # --- GENERAL PLAN ---
+        else:
+            st.subheader("🌿 General Stress Relief Plan")
+            st.markdown("""
+                - 🧘 Take a 5-minute break and breathe deeply  
+                - 📅 Write 3 simple tasks for today and finish one first  
+                - ☕ Have water or tea mindfully  
+                - 🎧 Play calming music for 10 minutes  
+                - ✨ Write one thing you’re grateful for today  
+            """)
 
 # ===============================================================
 # 💼 PAID SESSIONS
@@ -217,4 +327,4 @@ elif page == "Paid Sessions":
         with st.expander(f"{t['name']} — {t['expertise']}"):
             st.image("C:/Users/Naman/Desktop/Project/qr code.jpg", width=180, caption="Scan this Google Pay QR (₹100)")
             st.write("After payment, contact the facilitator to confirm your session.")
-            st.success(f"📞 Contact {t['name']} at: +91-XXXXXXXXXX" )
+            st.success(f"📞 Contact {t['name']} at: +91-XXXXXXXXXX")
