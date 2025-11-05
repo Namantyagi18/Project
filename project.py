@@ -1,4 +1,4 @@
-now make whole app attractive like ui colours more attractive and eye catching 
+
 
 import streamlit as st
 import pandas as pd
