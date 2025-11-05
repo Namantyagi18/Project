@@ -8,18 +8,14 @@ st.title("🌱 Digital Wellness Toolkit")
 st.markdown("#### The Silent Struggle — Manage stress, track mood, and connect with support circles.")
 
 st.sidebar.title("🧭 Navigation")
-page = st.sidebar.radio(
-    "Go to", 
-    [
-        "Task Manager",
-        "Mood Tracker",
-        "Wellness Tips",
-        "Peer Support Circles",
-        "Stress Relief Plans",
-        "Paid Sessions"
-    ],
-    key="navigation_menu"
-)
+page = st.sidebar.radio("Go to", [
+    "Task Manager",
+    "Mood Tracker",
+    "Wellness Tips",
+    "Peer Support Circles",
+    "Stress Relief Plans",
+    "Paid Sessions"
+])
 
 
 # --- Task Manager ---
