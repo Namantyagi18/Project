@@ -339,141 +339,182 @@ elif page == "Wellness Tips":
     st.markdown("✨ *Wellness begins with awareness — thank yourself for checking in today.* 🌸")
 
 
-# --- 🌿 AI-Powered Stress Relief Plans 2.0 ---
-elif page == "Stress Relief Plans":
-    st.header("💖 AI-Powered Stress Relief Companion")
-    st.markdown("#### Tell me what’s troubling you — I’ll help you calm your mind with a custom recovery plan 🌸")
+# --- Peer Support Circles (AI Recommendation + Interactive Join System) ---
+elif page == "Peer Support Circles":
+    st.header("🤝 Guided Peer Support Circles")
+    st.markdown("✨ Join a circle that fits your current emotional needs or get an AI suggestion based on how you feel 💬")
 
-    # 🎨 Calming UI
+    # Initialize circles and session data
+    if "joined_circles" not in st.session_state:
+        st.session_state.joined_circles = {}
+    if "circle_members" not in st.session_state:
+        st.session_state.circle_members = {
+            "Stress Support Circle": ["Aarav", "Diya", "Raj"],
+            "Productivity Boosters": ["Ishaan", "Tanya"],
+            "Calm Minds": ["Riya", "Karan", "Ananya"]
+        }
+
+    st.markdown("### 🧠 AI Recommendation")
+    user_feeling = st.text_area("💭 Describe how you feel today:", placeholder="e.g., I feel anxious about exams and deadlines...")
+
+    if st.button("✨ Get Circle Recommendation"):
+        if not user_feeling.strip():
+            st.warning("Please share a few words about how you feel.")
+        else:
+            feeling_lower = user_feeling.lower()
+            if any(word in feeling_lower for word in ["stress", "anxious", "pressure", "exam", "tired"]):
+                rec_circle = "Stress Support Circle"
+                reason = "It seems you're feeling academic or emotional stress. This group focuses on stress relief techniques 🌿."
+            elif any(word in feeling_lower for word in ["focus", "lazy", "motivation", "discipline", "goal"]):
+                rec_circle = "Productivity Boosters"
+                reason = "You're looking to stay consistent and productive. This circle shares focus-building tips 💪."
+            elif any(word in feeling_lower for word in ["peace", "relax", "calm", "meditation", "overthinking"]):
+                rec_circle = "Calm Minds"
+                reason = "You're seeking peace and balance — this group helps with mindfulness and relaxation 🌸."
+            else:
+                rec_circle = "Calm Minds"
+                reason = "You seem in need of calm reflection — Calm Minds could be your safe space 🌿."
+
+            st.success(f"💡 Recommended Circle: **{rec_circle}**")
+            st.info(reason)
+
+    st.markdown("---")
+    st.markdown("### 🌼 Explore and Join Circles")
+
+    circles = [
+        {"name": "Stress Support Circle", "topic": "Managing academic and emotional stress"},
+        {"name": "Productivity Boosters", "topic": "Staying focused, avoiding burnout"},
+        {"name": "Calm Minds", "topic": "Mindfulness, relaxation, and balance"}
+    ]
+
+    for c in circles:
+        members = st.session_state.circle_members.get(c["name"], [])
+        with st.expander(f"{c['name']} ({len(members)} members)"):
+            st.write(f"**Topic:** {c['topic']}")
+            st.write("👥 **Members:** " + ", ".join(members))
+
+            name = st.text_input(f"Enter your name to join {c['name']}:", key=f"name_{c['name']}")
+            if st.button(f"Join {c['name']}", key=f"join_{c['name']}"):
+                if not name.strip():
+                    st.warning("Please enter your name before joining.")
+                elif name in members:
+                    st.info(f"✅ {name}, you’re already part of this circle!")
+                else:
+                    st.session_state.circle_members[c["name"]].append(name)
+                    st.session_state.joined_circles[name] = c["name"]
+                    st.success(f"🎉 Welcome {name}! You’ve joined **{c['name']}** 🌿")
+
+    st.markdown("---")
+    st.markdown("### 💫 Your Joined Circles")
+
+    if st.session_state.joined_circles:
+        user_names = list(st.session_state.joined_circles.keys())
+        joined_groups = [st.session_state.joined_circles[n] for n in user_names]
+        joined_df = pd.DataFrame({"Member": user_names, "Circle": joined_groups})
+        st.dataframe(joined_df, use_container_width=True, height=150)
+    else:
+        st.info("You haven’t joined any circles yet. Join one to start connecting 💬")
+
+    st.markdown("---")
+    st.markdown("🌻 *Remember: you grow faster when you grow together.* 🌻")
+
+# --- Personalized Stress Relief Plans (Smart Version) ---
+elif page == "Stress Relief Plans":
+    st.header("💖 Personalized Stress Relief Plans")
+    st.write("🧘 Express your stress — get a custom relaxation plan that fits your situation and energy level 🌿")
+
+    # Styling
     st.markdown("""
         <style>
-        .relief-card {
-            background: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%);
-            padding: 25px;
+        .plan-card {
+            background: linear-gradient(135deg, #e0c3fc 0%, #8ec5fc 100%);
+            padding: 20px;
             border-radius: 15px;
             box-shadow: 0px 4px 10px rgba(0,0,0,0.2);
-            margin-top: 20px;
-            color: #333;
+            color: #222;
+            margin-top: 15px;
+            font-size: 1.1em;
         }
-        .step-box {
-            background: rgba(255, 255, 255, 0.6);
-            border-left: 6px solid #5cb85c;
-            padding: 10px 15px;
-            border-radius: 8px;
-            margin: 10px 0;
-        }
-        .affirmation {
-            background: linear-gradient(135deg, #f6d365 0%, #fda085 100%);
-            padding: 15px;
-            border-radius: 10px;
-            text-align: center;
-            font-weight: 500;
-            color: #2c3e50;
-            margin-top: 20px;
-            box-shadow: 0px 3px 8px rgba(0,0,0,0.2);
+        .plan-title {
+            font-size: 1.4em;
+            font-weight: bold;
+            color: #2E8B57;
         }
         </style>
     """, unsafe_allow_html=True)
 
-    # 🧘 User Input
-    user_text = st.text_area("💭 What’s been stressing you out lately?", 
-                             placeholder="e.g., I’m so tired from constant deadlines and can’t focus anymore...")
+    # Input area
+    user_stress = st.text_area("💭 What’s causing you stress today?", placeholder="e.g., I have too many assignments and can’t focus properly...")
 
-    if st.button("🌿 Generate My Recovery Plan"):
-        if not user_text.strip():
-            st.warning("Please describe your situation or emotion 💬")
+    if st.button("🌸 Get My Stress Relief Plan"):
+        if not user_stress.strip():
+            st.warning("Please describe your stress to get a personalized plan.")
         else:
-            text = user_text.lower()
-            mood = "neutral"
-            plan, affirmation, link = [], "", ""
+            stress_text = user_stress.lower()
+            plan_title, plan_details, playlist = "", [], ""
 
-            # --- AI Emotion Detection & Plan Creation ---
-            if any(word in text for word in ["exam", "assignment", "study", "grades", "school", "college"]):
-                mood = "academic stress"
-                title = "📚 Academic Overload"
-                plan = [
-                    "🎧 Play a soft instrumental playlist while studying — background calm boosts focus.",
-                    "📅 Break study blocks into 30-minute sprints and reward yourself after each one.",
-                    "💧 Take short water & stretch breaks — physical reset improves memory retention.",
-                    "🧘 Try deep breathing for 3 minutes before revising difficult topics.",
-                    "🌼 End the day by journaling one positive learning you achieved today."
+            # --- AI-like pattern detection ---
+            if any(word in stress_text for word in ["exam", "study", "assignment", "grades", "college", "school"]):
+                plan_title = "🎓 Academic Pressure Plan"
+                plan_details = [
+                    "🧘 Take a 10-minute guided breathing break.",
+                    "📅 Break your tasks into smaller steps — focus on one topic for 30 mins.",
+                    "💧 Drink water and stretch for 2 minutes after every study hour.",
+                    "🎧 Try a 'Focus & Calm' playlist to refresh your mind."
                 ]
-                link = "https://open.spotify.com/playlist/37i9dQZF1DX3PIPIT6lEg5"
-                affirmation = "You are learning at your own pace — and that’s perfectly okay 🌿"
+                playlist = "https://open.spotify.com/playlist/37i9dQZF1DX3PIPIT6lEg5"
 
-            elif any(word in text for word in ["work", "office", "boss", "job", "project", "meeting", "deadline"]):
-                mood = "work stress"
-                title = "💼 Workplace Burnout"
-                plan = [
-                    "☕ Step away from your desk and take 10 deep breaths by the window.",
-                    "🗂️ Write down only 3 essential tasks for today — small wins matter.",
-                    "📞 Speak kindly to yourself — pressure does not define worth.",
-                    "🌙 When you log off, truly disconnect — go for a short walk outside.",
-                    "🎧 Listen to a relaxation playlist during your commute or break."
+            elif any(word in stress_text for word in ["work", "job", "office", "burnout", "deadline"]):
+                plan_title = "💼 Workplace Burnout Plan"
+                plan_details = [
+                    "☕ Step away for a short mindful coffee or tea break.",
+                    "📋 Write down 3 priorities — focus only on those today.",
+                    "🌿 Go for a 5-minute walk outside or near a window.",
+                    "🎧 Listen to an 'Anti-Stress Acoustic' playlist."
                 ]
-                link = "https://open.spotify.com/playlist/37i9dQZF1DX83CujKHHOn"
-                affirmation = "You deserve peace — your value is not measured by productivity 💼"
+                playlist = "https://open.spotify.com/playlist/37i9dQZF1DX3rxVfibe1L0"
 
-            elif any(word in text for word in ["family", "relationship", "friend", "breakup", "alone", "lonely"]):
-                mood = "emotional stress"
-                title = "💖 Emotional Healing"
-                plan = [
-                    "💌 Write down your feelings — release what hurts onto paper.",
-                    "📞 Call or text someone you trust — connection soothes pain.",
-                    "🕯️ Light a candle or play calming music; let your space feel safe again.",
-                    "🌙 Do one act of self-kindness — even resting counts.",
-                    "🙏 Remind yourself that your emotions are valid and temporary."
+            elif any(word in stress_text for word in ["sleep", "insomnia", "tired", "fatigue"]):
+                plan_title = "🌙 Sleep & Energy Recovery Plan"
+                plan_details = [
+                    "😴 Turn off screens 30 minutes before bed.",
+                    "🧘 Try a short bedtime meditation (5-10 mins).",
+                    "💤 Write one good thing about today before sleeping.",
+                    "🎧 Play soft instrumental or ambient music."
                 ]
-                link = "https://open.spotify.com/playlist/37i9dQZF1DWZd79rJ6a7lp"
-                affirmation = "Your heart is strong — even in silence, you are healing 🤍"
+                playlist = "https://open.spotify.com/playlist/37i9dQZF1DWZd79rJ6a7lp"
 
-            elif any(word in text for word in ["tired", "sleep", "fatigue", "insomnia", "restless"]):
-                mood = "fatigue"
-                title = "😴 Exhaustion & Sleep Fatigue"
-                plan = [
-                    "🛏️ Unplug from screens for 30 minutes before bed — light resets your mind.",
-                    "🧘 Try 4-7-8 breathing — inhale for 4, hold for 7, exhale for 8.",
-                    "💧 Drink warm water or herbal tea — calm your body from within.",
-                    "🎵 Play slow ambient music or rain sounds before sleeping.",
-                    "🌼 Tomorrow is a new start — rest is your reset button."
+            elif any(word in stress_text for word in ["relationship", "friend", "family", "breakup", "alone", "lonely"]):
+                plan_title = "💞 Emotional Healing Plan"
+                plan_details = [
+                    "💖 Talk to someone who understands — connection heals.",
+                    "✍️ Write down your feelings — release what you can’t say out loud.",
+                    "🌈 Watch or read something uplifting.",
+                    "🪷 Do one self-care activity you love — music, art, or nature walk."
                 ]
-                link = "https://www.youtube.com/watch?v=ZToicYcHIOU"
-                affirmation = "You are allowed to pause — rest is not weakness, it’s self-respect 🌙"
-
-            elif any(word in text for word in ["panic", "anxiety", "overthinking", "fear", "nervous"]):
-                mood = "anxiety"
-                title = "🌬️ Anxiety & Overthinking"
-                plan = [
-                    "🫁 Focus on your breath — name 3 things you can see, 2 you can hear, 1 you can feel.",
-                    "🕊️ Repeat softly: ‘I am safe right now.’",
-                    "✍️ Write down your anxious thoughts, then fold the paper — your mind will follow.",
-                    "💧 Drink cool water and place a hand on your chest while breathing slowly.",
-                    "🎧 Listen to soft lo-fi or rain sounds for 5 minutes — sensory calm works wonders."
-                ]
-                link = "https://open.spotify.com/playlist/37i9dQZF1DX3rxVfibe1L0"
-                affirmation = "You are safe. You are grounded. You are more than your thoughts 🌬️"
+                playlist = "https://open.spotify.com/playlist/37i9dQZF1DX7gIoKXt0gmx"
 
             else:
-                mood = "general stress"
-                title = "🌿 Gentle Mind Reset"
-                plan = [
-                    "🪷 Sit comfortably and take 5 mindful breaths — let your shoulders drop.",
-                    "☀️ Step into sunlight for 2 minutes — nature restores balance.",
-                    "📖 Read one positive paragraph or quote that uplifts your spirit.",
-                    "🍵 Have a warm drink and do nothing — yes, absolutely nothing — for 3 minutes.",
-                    "💌 Whisper to yourself: ‘I’m doing enough, I am enough.’"
+                plan_title = "🌿 General Calm & Balance Plan"
+                plan_details = [
+                    "🪷 Breathe in deeply — count 4 in, 4 out — for 2 minutes.",
+                    "💧 Drink a glass of water mindfully.",
+                    "🧠 Note one small task you can finish easily.",
+                    "🎵 Play something peaceful and look away from screens for 5 mins."
                 ]
-                link = "https://open.spotify.com/playlist/37i9dQZF1DWZd79rJ6a7lp"
-                affirmation = "Even doing nothing for a while is an act of healing 🌼"
+                playlist = "https://open.spotify.com/playlist/37i9dQZF1DWU0ScTcjJBdj"
 
-            # --- 🌸 Display the AI-generated plan ---
-            st.markdown(f"<div class='relief-card'><h3>{title}</h3>", unsafe_allow_html=True)
-            for i, step in enumerate(plan, start=1):
-                st.markdown(f"<div class='step-box'><b>Step {i}:</b> {step}</div>", unsafe_allow_html=True)
-            st.markdown("</div>", unsafe_allow_html=True)
+            # --- Display result card ---
+            st.markdown(f"<div class='plan-card'><div class='plan-title'>{plan_title}</div>", unsafe_allow_html=True)
+            for step in plan_details:
+                st.markdown(f"- {step}")
+            st.markdown(f"</div>", unsafe_allow_html=True)
+            st.markdown(f"🎧 [Open Recommended Playlist]({playlist})", unsafe_allow_html=True)
 
-            st.markdown(f"🎧 [Click here for a recommended playlist to calm your mind]({link})", unsafe_allow_html=True)
-            st.markdown(f"<div class='affirmation'>{affirmation}</div>", unsafe_allow_html=True)
+            st.success("💚 Remember — one small act of calm can change your entire day.")
+
+    st.markdown("---")
+    st.markdown("✨ *Your peace matters. Take one gentle step at a time.* 🌼")
 
 
 # --- Paid Sessions ---
