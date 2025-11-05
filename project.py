@@ -17,24 +17,55 @@ page = st.sidebar.radio("Go to", [
     "Paid Sessions"
 ])
 
-# --- Task Manager ---
-if page == "Task Manager":
+elif page == "Task Manager":
     st.header("🕒 Task Manager")
-    st.write("Add and prioritize your daily tasks.")
+    st.write("Add, track, and complete your daily tasks with motivation!")
+
+    # Initialize session state
     if "tasks" not in st.session_state:
         st.session_state.tasks = []
-    task_input = st.text_input("Enter a new task:")
-    if st.button("Add Task"):
-        if task_input.strip():
-            st.session_state.tasks.append({"task": task_input, "done": False})
-    for i, t in enumerate(st.session_state.tasks):
-        col1, col2 = st.columns([0.8, 0.2])
-        if col1.checkbox(t["task"], value=t["done"], key=f"task_{i}"):
-            st.session_state.tasks[i]["done"] = True
-        if col2.button("❌", key=f"del_{i}"):
-            st.session_state.tasks.pop(i)
-            st.experimental_rerun()
 
+    # --- Add new task ---
+    with st.form("task_form", clear_on_submit=True):
+        new_task = st.text_input("✍️ Enter a new task:")
+        add_task = st.form_submit_button("Add Task")
+        if add_task and new_task.strip():
+            st.session_state.tasks.append({"task": new_task, "completed": False})
+            st.success(f"✅ Task '{new_task}' added!")
+
+    # --- Display tasks ---
+    if st.session_state.tasks:
+        st.subheader("📋 Your Tasks")
+        completed_count = 0
+
+        for i, t in enumerate(st.session_state.tasks):
+            cols = st.columns([0.1, 0.7, 0.2])
+            done = cols[0].checkbox("", value=t["completed"], key=f"task_{i}")
+            cols[1].write(f"**{t['task']}**")
+            if done:
+                st.session_state.tasks[i]["completed"] = True
+                cols[2].success("✔️ Completed")
+                completed_count += 1
+            else:
+                st.session_state.tasks[i]["completed"] = False
+                cols[2].warning("⏳ Pending")
+
+        total_tasks = len(st.session_state.tasks)
+        pending_tasks = total_tasks - completed_count
+
+        # --- Motivational feedback ---
+        st.divider()
+        if completed_count == 0:
+            st.info(f"📝 You have {pending_tasks} pending tasks. Let's get started!")
+        elif completed_count < total_tasks:
+            st.success(f"🎯 Great job! You’ve completed {completed_count} out of {total_tasks} tasks. Keep going!")
+        else:
+            st.balloons()
+            st.success("🌟 Amazing! You completed all your tasks for today!")
+    else:
+        st.info("No tasks added yet. Add your first task above ⬆️")
+
+      
 # --- Mood Tracker ---
 elif page == "Mood Tracker":
     st.header("😊 Mood Tracker")
