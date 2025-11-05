@@ -98,6 +98,7 @@ elif page == "Paid Sessions":
         {"name": "Akshay", "expertise": "Mindfulness & Breathing Techniques"},
         {"name": "Akshat", "expertise": "Work-Life Balance Coaching"},
         {"name": "Arjun", "expertise": "Guided Relaxation & Emotional Healing"},
+        {"name": "Brahmliv Kaur", "expertise": "Emotional Clarity & Self-Compassion Sessions"},
     ]
 
     for t in trainers:
