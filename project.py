@@ -7,6 +7,7 @@ st.set_page_config(page_title="Digital Wellness Toolkit", page_icon="🌱", layo
 st.title("🌱 Digital Wellness Toolkit")
 st.markdown("#### The Silent Struggle — Manage stress, track mood, and connect with support circles.")
 
+# Sidebar Navigation
 st.sidebar.title("🧭 Navigation")
 page = st.sidebar.radio("Go to", [
     "Task Manager",
@@ -17,7 +18,8 @@ page = st.sidebar.radio("Go to", [
     "Paid Sessions"
 ])
 
-elif page == "Task Manager":
+# --- Task Manager ---
+if page == "Task Manager":
     st.header("🕒 Task Manager")
     st.write("Add, track, and complete your daily tasks with motivation!")
 
@@ -65,7 +67,6 @@ elif page == "Task Manager":
     else:
         st.info("No tasks added yet. Add your first task above ⬆️")
 
-      
 # --- Mood Tracker ---
 elif page == "Mood Tracker":
     st.header("😊 Mood Tracker")
@@ -76,7 +77,10 @@ elif page == "Mood Tracker":
     mood = st.radio("Select your current mood:", ["😊 Happy", "😐 Neutral", "☹️ Sad"], horizontal=True)
     if st.button("Log Mood"):
         new_entry = {"Time": datetime.datetime.now().strftime("%H:%M:%S"), "Mood": mood}
-        st.session_state.mood_data = pd.concat([st.session_state.mood_data, pd.DataFrame([new_entry])], ignore_index=True)
+        st.session_state.mood_data = pd.concat(
+            [st.session_state.mood_data, pd.DataFrame([new_entry])],
+            ignore_index=True
+        )
         st.success("Mood logged successfully!")
 
     if not st.session_state.mood_data.empty:
@@ -94,7 +98,7 @@ elif page == "Wellness Tips":
     ]
     st.info(f"✨ {tips[pd.Timestamp.now().second % len(tips)]}")
 
-# --- Peer Circles ---
+# --- Peer Support Circles ---
 elif page == "Peer Support Circles":
     st.header("🤝 Guided Peer Support Circles")
     circles = [
@@ -134,7 +138,5 @@ elif page == "Paid Sessions":
 
     for t in trainers:
         with st.expander(f"{t['name']} — {t['expertise']}"):
-            st.image("https://github.com/Namantyagi18/Project/blob/main/qr%20code.jpg", width=180, caption="Scan this Google Pay QR (₹100)")
+            st.image(r"C:\Users\Naman\Desktop\Project\qr code.jpg", width=180, caption="Scan this Google Pay QR (₹100)")
             st.write("After payment, contact the facilitator to confirm your session timing.")
-
-   
