@@ -92,22 +92,139 @@ if page == "Task Manager":
 
 # --- Mood Tracker ---
 elif page == "Mood Tracker":
-    st.header("😊 Mood Tracker")
-    st.write("Log your current mood and view trends.")
-    if "mood_data" not in st.session_state:
-        st.session_state.mood_data = pd.DataFrame(columns=["Time", "Mood"])
+    import plotly.express as px
 
-    mood = st.radio("Select your current mood:", ["😊 Happy", "😐 Neutral", "☹️ Sad"], horizontal=True)
-    if st.button("Log Mood"):
-        new_entry = {"Time": datetime.datetime.now().strftime("%H:%M:%S"), "Mood": mood}
+    # 🌈 Stylish background + button CSS
+    st.markdown("""
+        <style>
+        body {
+            background: linear-gradient(135deg, #d4fc79 0%, #96e6a1 100%);
+        }
+        .stButton>button {
+            border-radius: 15px;
+            height: 4em;
+            width: 100%;
+            background: linear-gradient(135deg, #a1ffce 0%, #faffd1 100%);
+            border: none;
+            color: #333;
+            font-size: 1.3em;
+            font-weight: 600;
+            box-shadow: 0px 4px 10px rgba(0,0,0,0.2);
+            transition: all 0.3s ease;
+        }
+        .stButton>button:hover {
+            transform: scale(1.05);
+            box-shadow: 0px 6px 14px rgba(0,0,0,0.3);
+        }
+        .block-container {
+            padding-top: 1rem;
+            padding-bottom: 1rem;
+            border-radius: 15px;
+        }
+        </style>
+    """, unsafe_allow_html=True)
+
+    st.markdown("<h2 style='text-align:center; color:#006400;'>🧘 Mood Tracker</h2>", unsafe_allow_html=True)
+    st.markdown("<p style='text-align:center;'>Log your daily emotions and visualize your inner journey 🌿</p>", unsafe_allow_html=True)
+
+    # Initialize session state
+    if "mood_data" not in st.session_state:
+        st.session_state.mood_data = pd.DataFrame(columns=["Time", "Mood", "Note"])
+
+    # Mood selection section
+    st.markdown("### ✨ How are you feeling right now?")
+    mood_col1, mood_col2, mood_col3 = st.columns(3)
+    with mood_col1:
+        happy = st.button("😊 Happy")
+    with mood_col2:
+        neutral = st.button("😐 Neutral")
+    with mood_col3:
+        sad = st.button("☹️ Sad")
+
+    note = st.text_area(
+        "💭 Write about how you feel (optional):",
+        placeholder="e.g., Feeling motivated after gym or a bit tired from studies...",
+    )
+
+    current_time = datetime.datetime.now().strftime("%I:%M %p")
+
+    # Logging moods
+    if happy:
+        mood, msg, color = "😊 Happy", "🌞 You’re shining bright today!", "#A3E4D7"
+    elif neutral:
+        mood, msg, color = "😐 Neutral", "🌤️ Balanced mood — take a mindful pause.", "#F9E79F"
+    elif sad:
+        mood, msg, color = "☹️ Sad", "💖 It’s okay to feel down — give yourself kindness.", "#F5B7B1"
+    else:
+        mood, msg, color = None, None, None
+
+    if mood:
+        new_entry = {"Time": current_time, "Mood": mood, "Note": note}
         st.session_state.mood_data = pd.concat(
             [st.session_state.mood_data, pd.DataFrame([new_entry])],
-            ignore_index=True
+            ignore_index=True,
         )
-        st.success("Mood logged successfully!")
+        st.markdown(
+            f"<div style='background-color:{color}; padding:15px; border-radius:10px; text-align:center; font-size:1.1em; font-weight:500;'>{msg}</div>",
+            unsafe_allow_html=True,
+        )
 
+    # --- Mood Visualization ---
     if not st.session_state.mood_data.empty:
-        st.line_chart(st.session_state.mood_data["Mood"].map({"😊 Happy": 3, "😐 Neutral": 2, "☹️ Sad": 1}))
+        st.markdown("---")
+        st.markdown("<h4 style='text-align:center;'>📈 Your Mood Flow</h4>", unsafe_allow_html=True)
+
+        mood_map = {"😊 Happy": 3, "😐 Neutral": 2, "☹️ Sad": 1}
+        color_map = {"😊 Happy": "#2ECC71", "😐 Neutral": "#F1C40F", "☹️ Sad": "#E74C3C"}
+        mood_df = st.session_state.mood_data.copy()
+        mood_df["Mood_Value"] = mood_df["Mood"].map(mood_map)
+
+        # Create a smooth mood flow chart
+        fig = px.line(
+            mood_df,
+            x="Time",
+            y="Mood_Value",
+            text="Mood",
+            markers=True,
+            color="Mood",
+            color_discrete_map=color_map,
+            title="Emotional Flow Over Time"
+        )
+
+        fig.update_traces(
+            textposition="top center",
+            line_shape="spline",
+            line=dict(width=4),
+            marker=dict(size=15, line=dict(width=2, color="white"))
+        )
+
+        fig.update_yaxes(
+            tickvals=[1, 2, 3],
+            ticktext=["☹️ Sad", "😐 Neutral", "😊 Happy"],
+            title="Mood Level"
+        )
+
+        fig.update_layout(
+            xaxis_title="Time Logged",
+            yaxis_title="Mood",
+            template="plotly_white",
+            plot_bgcolor="rgba(245,255,245,0.9)",
+            paper_bgcolor="rgba(255,255,255,0)",
+            font=dict(family="Arial", size=14),
+            title_font=dict(size=20, color="#2E8B57"),
+        )
+
+        st.plotly_chart(fig, use_container_width=True)
+
+        # --- Display Mood Log ---
+        st.markdown("---")
+        st.subheader("🗒️ Mood Journal")
+        st.dataframe(
+            mood_df[["Time", "Mood", "Note"]],
+            use_container_width=True,
+            height=200,
+        )
+
 
 # --- Wellness Tips ---
 elif page == "Wellness Tips":
@@ -164,4 +281,4 @@ elif page == "Paid Sessions":
             st.image(r"https://github.com/Namantyagi18/Project/blob/main/qr%20code.jpg", width=180, caption="Scan this Google Pay QR (₹100)")
             st.write("After payment, contact the facilitator to confirm your session timing.")
             if st.button(f"Contact {t['name']}", key=t['name']):
-                st.info(f"Contact {t['name']} at: +91-9627216110")
+                st.info(f"Contact {t['name']} at: +91-XXXXXXXXXX")
