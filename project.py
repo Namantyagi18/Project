@@ -7,7 +7,6 @@ st.set_page_config(page_title="Digital Wellness Toolkit", page_icon="🌱", layo
 st.title("🌱 Digital Wellness Toolkit")
 st.markdown("#### The Silent Struggle — Manage stress, track mood, and connect with support circles.")
 
-# Sidebar Navigation
 st.sidebar.title("🧭 Navigation")
 page = st.sidebar.radio("Go to", [
     "Task Manager",
@@ -21,74 +20,20 @@ page = st.sidebar.radio("Go to", [
 # --- Task Manager ---
 if page == "Task Manager":
     st.header("🕒 Task Manager")
-    st.write("Add, track, and complete your daily tasks with motivation!")
-
-    # Initialize session state
+    st.write("Add and prioritize your daily tasks.")
     if "tasks" not in st.session_state:
         st.session_state.tasks = []
-    if "last_completed_count" not in st.session_state:
-        st.session_state.last_completed_count = 0
-
-    # --- Add new tasks (multiple support) ---
-    with st.form("task_form", clear_on_submit=True):
-        st.markdown("### ✍️ Add New Tasks")
-        new_tasks = st.text_area("Enter one or more tasks (each on a new line):")
-        add_task = st.form_submit_button("➕ Add Task(s)")
-        if add_task and new_tasks.strip():
-            task_list = [t.strip() for t in new_tasks.split("\n") if t.strip()]
-            for t in task_list:
-                st.session_state.tasks.append({
-                    "task": t,
-                    "completed": False,
-                    "date": datetime.date.today().strftime("%d-%m-%Y"),
-                    "time": datetime.datetime.now().strftime("%I:%M %p")
-                })
-            st.success(f"✅ Added {len(task_list)} new task(s)!")
-
-    # --- Display tasks ---
-    if st.session_state.tasks:
-        st.subheader("📋 Your Tasks")
-        completed_count = 0
-
-        for i, t in enumerate(st.session_state.tasks):
-            cols = st.columns([0.07, 0.63, 0.3])
-            done = cols[0].checkbox("", value=t["completed"], key=f"task_{i}")
-            cols[1].write(f"**{t['task']}**  \n📅 *{t['date']}* | 🕒 *{t['time']}*")
-            if done:
-                st.session_state.tasks[i]["completed"] = True
-                cols[2].success("✔️ Completed")
-                completed_count += 1
-            else:
-                st.session_state.tasks[i]["completed"] = False
-                cols[2].warning("⏳ Pending")
-
-        total_tasks = len(st.session_state.tasks)
-        pending_tasks = total_tasks - completed_count
-
-        # --- Detect newly completed tasks ---
-        if completed_count > st.session_state.last_completed_count:
-            new_done = completed_count - st.session_state.last_completed_count
-            st.success(f"🎉 Great! You completed {new_done} task{'s' if new_done > 1 else ''}!")
-        st.session_state.last_completed_count = completed_count
-
-        # --- Motivational feedback ---
-        st.divider()
-        if completed_count == 0:
-            st.info(f"📝 You have {pending_tasks} pending tasks. Let's get started!")
-        elif completed_count < total_tasks:
-            st.success(f"🎯 Great job! You’ve completed {completed_count} out of {total_tasks} tasks. Keep going!")
-        else:
-            st.balloons()
-            st.success("🌟 Amazing! You completed all your tasks for today!")
-
-        # --- Clear all tasks button ---
-        if st.button("🗑️ Clear All Tasks"):
-            st.session_state.tasks.clear()
-            st.session_state.last_completed_count = 0
-            st.warning("All tasks cleared!")
-            st.rerun()
-    else:
-        st.info("No tasks added yet. Add your first task above ⬆️")
+    task_input = st.text_input("Enter a new task:")
+    if st.button("Add Task"):
+        if task_input.strip():
+            st.session_state.tasks.append({"task": task_input, "done": False})
+    for i, t in enumerate(st.session_state.tasks):
+        col1, col2 = st.columns([0.8, 0.2])
+        if col1.checkbox(t["task"], value=t["done"], key=f"task_{i}"):
+            st.session_state.tasks[i]["done"] = True
+        if col2.button("❌", key=f"del_{i}"):
+            st.session_state.tasks.pop(i)
+            st.experimental_rerun()
 
 # --- Mood Tracker ---
 elif page == "Mood Tracker":
@@ -100,28 +45,90 @@ elif page == "Mood Tracker":
     mood = st.radio("Select your current mood:", ["😊 Happy", "😐 Neutral", "☹️ Sad"], horizontal=True)
     if st.button("Log Mood"):
         new_entry = {"Time": datetime.datetime.now().strftime("%H:%M:%S"), "Mood": mood}
-        st.session_state.mood_data = pd.concat(
-            [st.session_state.mood_data, pd.DataFrame([new_entry])],
-            ignore_index=True
-        )
+        st.session_state.mood_data = pd.concat([st.session_state.mood_data, pd.DataFrame([new_entry])], ignore_index=True)
         st.success("Mood logged successfully!")
 
     if not st.session_state.mood_data.empty:
         st.line_chart(st.session_state.mood_data["Mood"].map({"😊 Happy": 3, "😐 Neutral": 2, "☹️ Sad": 1}))
 
-# --- Wellness Tips ---
+# --- Emotion-Aware Wellness Tips ---
 elif page == "Wellness Tips":
-    st.header("💬 Wellness Tips")
-    tips = [
-        "Take a short walk and stretch. 🚶‍♀️",
-        "Remember to breathe deeply for a minute. 🌬️",
-        "Organize your tasks one at a time. ✅",
-        "Unplug for 10 minutes. 🌿",
-        "Smile! You’re doing great. 😊"
-    ]
-    st.info(f"✨ {tips[pd.Timestamp.now().second % len(tips)]}")
+    st.header("💬 Emotion-Aware Wellness Assistant")
+    st.write("✨ Express how you feel below — your app will understand your emotion and share a helpful wellness tip 🌿")
 
-# --- Peer Support Circles ---
+    st.markdown("""
+        <style>
+        .emotion-card {
+            padding: 20px;
+            border-radius: 15px;
+            text-align: center;
+            font-size: 1.2em;
+            font-weight: 500;
+            box-shadow: 0px 4px 12px rgba(0,0,0,0.2);
+            margin-top: 20px;
+            color: #333;
+        }
+        .happy { background: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%); }
+        .neutral { background: linear-gradient(135deg, #fff1eb 0%, #ace0f9 100%); }
+        .sad { background: linear-gradient(135deg, #fbc2eb 0%, #a6c1ee 100%); }
+        </style>
+    """, unsafe_allow_html=True)
+
+    # User expresses emotion
+    emotion_text = st.text_area("💭 Write how you feel today:", placeholder="e.g., I feel tired and anxious about my exams...")
+
+    if st.button("💡 Get My Wellness Tip"):
+        if not emotion_text.strip():
+            st.warning("Please express your feelings first 💬")
+        else:
+            # Basic sentiment analysis (simple keyword-based)
+            emotion_text_lower = emotion_text.lower()
+            happy_words = ["happy", "great", "good", "excited", "joy", "grateful", "awesome"]
+            sad_words = ["sad", "tired", "stressed", "depressed", "anxious", "upset", "angry", "lonely"]
+            neutral_words = ["okay", "fine", "normal", "alright", "neutral"]
+
+            mood = "neutral"
+            if any(word in emotion_text_lower for word in happy_words):
+                mood = "happy"
+            elif any(word in emotion_text_lower for word in sad_words):
+                mood = "sad"
+
+            # Mood-based tips
+            if mood == "happy":
+                tips = [
+                    "🌞 Keep this energy alive — share your joy with someone today!",
+                    "💬 Write down 3 things that made you smile today — small joys matter.",
+                    "🎵 Play your favorite upbeat song and celebrate yourself!",
+                    "🌼 Use your positive energy to start something creative today!"
+                ]
+                selected_tip = tips[datetime.datetime.now().second % len(tips)]
+                st.markdown(f"<div class='emotion-card happy'>😊 **You seem joyful!** <br><br>{selected_tip}</div>", unsafe_allow_html=True)
+
+            elif mood == "sad":
+                tips = [
+                    "💖 It’s okay to rest — healing is progress too.",
+                    "🌧️ Try writing down your feelings — you’ll feel lighter after.",
+                    "🤍 Call a friend or listen to calming music — connection heals.",
+                    "🌙 Breathe deeply and remind yourself: tough times pass, gentle soul."
+                ]
+                selected_tip = tips[datetime.datetime.now().second % len(tips)]
+                st.markdown(f"<div class='emotion-card sad'>☁️ **You seem a bit low.** <br><br>{selected_tip}</div>", unsafe_allow_html=True)
+
+            else:
+                tips = [
+                    "🌿 Take a short walk or stretch — clarity comes with motion.",
+                    "☕ Make yourself a warm drink and take 5 mindful breaths.",
+                    "📚 Read a quote or a short poem that inspires you.",
+                    "🪷 Pause. Reflect. You’re doing just fine — one step at a time."
+                ]
+                selected_tip = tips[datetime.datetime.now().second % len(tips)]
+                st.markdown(f"<div class='emotion-card neutral'>🌤️ **You seem calm.** <br><br>{selected_tip}</div>", unsafe_allow_html=True)
+
+    st.markdown("---")
+    st.markdown("✨ *Wellness begins with awareness — thank yourself for checking in today.* 🌸")
+
+
+# --- Peer Circles ---
 elif page == "Peer Support Circles":
     st.header("🤝 Guided Peer Support Circles")
     circles = [
@@ -161,8 +168,5 @@ elif page == "Paid Sessions":
 
     for t in trainers:
         with st.expander(f"{t['name']} — {t['expertise']}"):
-            st.image(r"https://github.com/Namantyagi18/Project/blob/main/qr%20code.jpg", width=180, caption="Scan this Google Pay QR (₹100)")
+            st.image(r"C:\Users\Naman\Desktop\Project\qr code.jpg", width=180, caption="Scan this Google Pay QR (₹100)")
             st.write("After payment, contact the facilitator to confirm your session timing.")
-            if st.button(f"Contact {t['name']}", key=t['name']):
-                st.info(f"Contact {t['name']} at: +91-9627216110")
-                st.success("Session booked! Looking forward to helping you relax and rejuvenate. 🌿")      
