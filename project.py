@@ -19,23 +19,35 @@ page = st.sidebar.radio("Go to", [
 
 
 
-# --- 🕒 Task Manager with Date & Time ---
+# --- 🕒 Safe & Enhanced Task Manager ---
 if page == "Task Manager":
     st.header("🕒 Task Manager")
     st.write("Add, track, and complete your daily tasks with motivation and clarity!")
 
-    # --- Initialize session state ---
+    # --- Initialize session state safely ---
     if "tasks" not in st.session_state:
         st.session_state.tasks = []
     if "last_completed_count" not in st.session_state:
         st.session_state.last_completed_count = 0
 
-    # --- Add new tasks (support multiple lines) ---
+    # --- Auto-fix any older saved tasks missing keys ---
+    for t in st.session_state.tasks:
+        if "completed" not in t:
+            t["completed"] = False
+        if "date" not in t:
+            t["date"] = datetime.date.today().strftime("%d-%m-%Y")
+        if "time" not in t:
+            t["time"] = datetime.datetime.now().strftime("%I:%M %p")
+
+    # --- Add new tasks (multiple line input) ---
     with st.form("task_form", clear_on_submit=True):
         st.markdown("### ✍️ Add New Tasks")
-        new_tasks = st.text_area("Enter one or more tasks (each on a new line):", 
-                                 placeholder="Example:\n- Complete biology assignment\n- Call Arjun\n- Go for evening walk")
+        new_tasks = st.text_area(
+            "Enter one or more tasks (each on a new line):",
+            placeholder="Example:\n- Complete biology assignment\n- Call Arjun\n- Go for evening walk"
+        )
         add_task = st.form_submit_button("➕ Add Task(s)")
+
         if add_task and new_tasks.strip():
             task_list = [t.strip() for t in new_tasks.split("\n") if t.strip()]
             for t in task_list:
@@ -53,10 +65,11 @@ if page == "Task Manager":
         completed_count = 0
 
         for i, t in enumerate(st.session_state.tasks):
+            # Create task row
             cols = st.columns([0.07, 0.6, 0.33])
-            done = cols[0].checkbox("", value=t["completed"], key=f"task_{i}")
-            cols[1].write(f"**{t['task']}**  \n📅 *{t['date']}* | 🕒 *{t['time']}*")
-            
+            done = cols[0].checkbox("", value=t.get("completed", False), key=f"task_{i}")
+            cols[1].write(f"**{t.get('task', 'Unnamed Task')}**  \n📅 *{t.get('date', '')}* | 🕒 *{t.get('time', '')}*")
+
             if done:
                 st.session_state.tasks[i]["completed"] = True
                 cols[2].success("✔️ Completed")
@@ -84,7 +97,7 @@ if page == "Task Manager":
             st.toast(f"🎉 You just completed {new_done} task{'s' if new_done > 1 else ''}!", icon="✅")
         st.session_state.last_completed_count = completed_count
 
-        # --- Clear All Tasks Button ---
+        # --- Clear All Tasks ---
         st.divider()
         if st.button("🗑️ Clear All Tasks"):
             st.session_state.tasks.clear()
@@ -93,6 +106,7 @@ if page == "Task Manager":
             st.rerun()
     else:
         st.info("No tasks added yet. Add your first task above ⬆️")
+
 
 # --- Mood Tracker ---
 elif page == "Mood Tracker":
