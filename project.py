@@ -146,26 +146,62 @@ elif page == "Stress Relief Plans":
     }
     st.success(plans[current_mood])
 
-# --- Paid Sessions ---
+# ===============================================================
+# 💼 PAID SESSIONS (Improved)
+# ===============================================================
 elif page == "Paid Sessions":
-    st.header("💼 Paid Stress-Relief Sessions (₹100)")
-    st.write("Book a 1-on-1 guided stress relief session with one of our facilitators. Payment through Google Pay QR below 👇")
+    st.header("💼 Premium Stress-Relief Sessions (₹100)")
+    st.write("Book a 1-on-1 guided session with our certified facilitators. 🌿")
 
+    # Intro section
+    st.markdown("""
+    💖 **How it works:**
+    1. Browse the available facilitators below 👇  
+    2. Scan the QR code to pay ₹100 via Google Pay  
+    3. After payment, click **‘Confirm Booking’** and contact the facilitator for scheduling  
+    """)
+
+    # QR image URL (raw GitHub version)
+    qr_url = "https://raw.githubusercontent.com/Namantyagi18/Project/main/qr%20code.jpg"
+
+    # Facilitator profiles
     trainers = [
         {"name": "Naman", "expertise": "Stress Management & Positive Mindset"},
         {"name": "Akshay", "expertise": "Mindfulness & Breathing Techniques"},
         {"name": "Akshat", "expertise": "Work-Life Balance Coaching"},
         {"name": "Arjun", "expertise": "Guided Relaxation & Emotional Healing"},
-        {"name": "Brahmliv Kaur", "expertise": "Emotional Clarity & Self-Compassion Sessions"},
+        {"name": "Brahmliv Kaur", "expertise": "Emotional Clarity & Self-Compassion"},
     ]
 
+    # Show each trainer in a card layout
     for t in trainers:
-        with st.expander(f"{t['name']} — {t['expertise']}"):
-            st.image("https://raw.githubusercontent.com/Namantyagi18/Project/main/qr%20code.jpg", 
-         width=180, 
-         caption="Scan this Google Pay QR (₹100)")
+        with st.expander(f"✨ {t['name']} — {t['expertise']}"):
+            col1, col2 = st.columns([0.3, 0.7])
+            with col1:
+                try:
+                    st.image(qr_url, width=180, caption="📱 Scan this Google Pay QR (₹100)")
+                except Exception:
+                    st.warning("⚠️ QR Image not available right now. Please contact the facilitator directly.")
+            with col2:
+                st.markdown(f"**Facilitator:** {t['name']}")
+                st.markdown(f"**Expertise:** {t['expertise']}")
+                st.markdown("**Session Fee:** ₹100 / 30 minutes")
+                st.markdown("**Mode:** Google Meet / WhatsApp Call")
 
-            st.write("After payment, contact the facilitator to confirm your session timing.")
-            if st.button(f"Contact {t['name']}", key=t['name']):
-                st.info(f"Contact {t['name']} at: +91-XXXXXXXXXX")
-                st.success("Session booked! Looking forward to helping you relax and rejuvenate. 🌿")      
+                name = st.text_input(f"Enter your name for booking with {t['name']}", key=f"name_{t['name']}")
+                contact = st.text_input(f"Enter your contact number", key=f"contact_{t['name']}")
+
+                if st.button(f"✅ Confirm Booking with {t['name']}", key=f"confirm_{t['name']}"):
+                    if name.strip() and contact.strip():
+                        st.success(f"🎉 {name}, your booking with **{t['name']}** is confirmed! They will contact you soon.")
+                        st.info(f"📞 Contact {t['name']} at: +91-9627216110")
+                        booking_data = f"""
+                        Name: {name}
+                        Contact: {contact}
+                        Facilitator: {t['name']}
+                        Expertise: {t['expertise']}
+                        Fee: ₹100
+                        """
+                        st.download_button("📥 Download Booking Receipt", booking_data, "booking_info.txt")
+                    else:
+                        st.warning("Please enter your name and contact number to confirm booking.")
