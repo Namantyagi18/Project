@@ -1,53 +1,54 @@
 import streamlit as st
 import pandas as pd
 import datetime
+import uuid  # ✅ for auto unique widget keys
 
+# --- PAGE CONFIG ---
 st.set_page_config(page_title="Digital Wellness Toolkit", page_icon="🌱", layout="wide")
 
 st.title("🌱 Digital Wellness Toolkit")
 st.markdown("#### The Silent Struggle — Manage stress, track mood, and connect with support circles.")
 
+# --- SAFE WIDGET HELPER ---
+def safe_radio(label, options, **kwargs):
+    """Creates a Streamlit radio widget with a guaranteed unique key."""
+    unique_key = kwargs.get("key", f"{label}_{uuid.uuid4().hex[:6]}")
+    return st.sidebar.radio(label, options, key=unique_key)
+
+# --- SIDEBAR NAVIGATION ---
 st.sidebar.title("🧭 Navigation")
-page = st.sidebar.radio("Go to", [
-    "Task Manager",
-    "Mood Tracker",
-    "Wellness Tips",
-    "Peer Support Circles",
-    "Stress Relief Plans",
-    "Paid Sessions"
-])
+page = safe_radio(
+    "Go to",
+    [
+        "Task Manager",
+        "Mood Tracker",
+        "Wellness Tips",
+        "Peer Support Circles",
+        "Stress Relief Plans",
+        "Paid Sessions"
+    ]
+)
 
 
 
-# --- 🕒 Safe & Enhanced Task Manager ---
+
+# --- 🕒 Task Manager with Date & Time ---
 if page == "Task Manager":
     st.header("🕒 Task Manager")
     st.write("Add, track, and complete your daily tasks with motivation and clarity!")
 
-    # --- Initialize session state safely ---
+    # --- Initialize session state ---
     if "tasks" not in st.session_state:
         st.session_state.tasks = []
     if "last_completed_count" not in st.session_state:
         st.session_state.last_completed_count = 0
 
-    # --- Auto-fix any older saved tasks missing keys ---
-    for t in st.session_state.tasks:
-        if "completed" not in t:
-            t["completed"] = False
-        if "date" not in t:
-            t["date"] = datetime.date.today().strftime("%d-%m-%Y")
-        if "time" not in t:
-            t["time"] = datetime.datetime.now().strftime("%I:%M %p")
-
-    # --- Add new tasks (multiple line input) ---
+    # --- Add new tasks (support multiple lines) ---
     with st.form("task_form", clear_on_submit=True):
         st.markdown("### ✍️ Add New Tasks")
-        new_tasks = st.text_area(
-            "Enter one or more tasks (each on a new line):",
-            placeholder="Example:\n- Complete biology assignment\n- Call Arjun\n- Go for evening walk"
-        )
+        new_tasks = st.text_area("Enter one or more tasks (each on a new line):", 
+                                 placeholder="Example:\n- Complete biology assignment\n- Call Arjun\n- Go for evening walk")
         add_task = st.form_submit_button("➕ Add Task(s)")
-
         if add_task and new_tasks.strip():
             task_list = [t.strip() for t in new_tasks.split("\n") if t.strip()]
             for t in task_list:
@@ -65,11 +66,10 @@ if page == "Task Manager":
         completed_count = 0
 
         for i, t in enumerate(st.session_state.tasks):
-            # Create task row
             cols = st.columns([0.07, 0.6, 0.33])
-            done = cols[0].checkbox("", value=t.get("completed", False), key=f"task_{i}")
-            cols[1].write(f"**{t.get('task', 'Unnamed Task')}**  \n📅 *{t.get('date', '')}* | 🕒 *{t.get('time', '')}*")
-
+            done = cols[0].checkbox("", value=t["completed"], key=f"task_{i}")
+            cols[1].write(f"**{t['task']}**  \n📅 *{t['date']}* | 🕒 *{t['time']}*")
+            
             if done:
                 st.session_state.tasks[i]["completed"] = True
                 cols[2].success("✔️ Completed")
@@ -97,7 +97,7 @@ if page == "Task Manager":
             st.toast(f"🎉 You just completed {new_done} task{'s' if new_done > 1 else ''}!", icon="✅")
         st.session_state.last_completed_count = completed_count
 
-        # --- Clear All Tasks ---
+        # --- Clear All Tasks Button ---
         st.divider()
         if st.button("🗑️ Clear All Tasks"):
             st.session_state.tasks.clear()
@@ -106,7 +106,6 @@ if page == "Task Manager":
             st.rerun()
     else:
         st.info("No tasks added yet. Add your first task above ⬆️")
-
 
 # --- Mood Tracker ---
 elif page == "Mood Tracker":
