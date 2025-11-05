@@ -1,6 +1,7 @@
 import streamlit as st
 import pandas as pd
 import datetime
+import plotly.express as px
 
 st.set_page_config(page_title="Digital Wellness Toolkit", page_icon="🌱", layout="wide")
 
@@ -23,13 +24,11 @@ if page == "Task Manager":
     st.header("🕒 Task Manager")
     st.write("Add, track, and complete your daily tasks with motivation!")
 
-    # Initialize session state
     if "tasks" not in st.session_state:
         st.session_state.tasks = []
     if "last_completed_count" not in st.session_state:
         st.session_state.last_completed_count = 0
 
-    # --- Add new tasks (multiple support) ---
     with st.form("task_form", clear_on_submit=True):
         st.markdown("### ✍️ Add New Tasks")
         new_tasks = st.text_area("Enter one or more tasks (each on a new line):")
@@ -45,7 +44,6 @@ if page == "Task Manager":
                 })
             st.success(f"✅ Added {len(task_list)} new task(s)!")
 
-    # --- Display tasks ---
     if st.session_state.tasks:
         st.subheader("📋 Your Tasks")
         completed_count = 0
@@ -65,13 +63,11 @@ if page == "Task Manager":
         total_tasks = len(st.session_state.tasks)
         pending_tasks = total_tasks - completed_count
 
-        # --- Detect newly completed tasks ---
         if completed_count > st.session_state.last_completed_count:
             new_done = completed_count - st.session_state.last_completed_count
             st.success(f"🎉 Great! You completed {new_done} task{'s' if new_done > 1 else ''}!")
         st.session_state.last_completed_count = completed_count
 
-        # --- Motivational feedback ---
         st.divider()
         if completed_count == 0:
             st.info(f"📝 You have {pending_tasks} pending tasks. Let's get started!")
@@ -81,7 +77,6 @@ if page == "Task Manager":
             st.balloons()
             st.success("🌟 Amazing! You completed all your tasks for today!")
 
-        # --- Clear all tasks button ---
         if st.button("🗑️ Clear All Tasks"):
             st.session_state.tasks.clear()
             st.session_state.last_completed_count = 0
@@ -92,7 +87,6 @@ if page == "Task Manager":
 
 # --- Mood Tracker ---
 elif page == "Mood Tracker":
-    import plotly.express as px
 
     # 🌈 Stylish background + button CSS
     st.markdown("""
@@ -116,22 +110,15 @@ elif page == "Mood Tracker":
             transform: scale(1.05);
             box-shadow: 0px 6px 14px rgba(0,0,0,0.3);
         }
-        .block-container {
-            padding-top: 1rem;
-            padding-bottom: 1rem;
-            border-radius: 15px;
-        }
         </style>
     """, unsafe_allow_html=True)
 
     st.markdown("<h2 style='text-align:center; color:#006400;'>🧘 Mood Tracker</h2>", unsafe_allow_html=True)
     st.markdown("<p style='text-align:center;'>Log your daily emotions and visualize your inner journey 🌿</p>", unsafe_allow_html=True)
 
-    # Initialize session state
     if "mood_data" not in st.session_state:
         st.session_state.mood_data = pd.DataFrame(columns=["Time", "Mood", "Note"])
 
-    # Mood selection section
     st.markdown("### ✨ How are you feeling right now?")
     mood_col1, mood_col2, mood_col3 = st.columns(3)
     with mood_col1:
@@ -141,14 +128,9 @@ elif page == "Mood Tracker":
     with mood_col3:
         sad = st.button("☹️ Sad")
 
-    note = st.text_area(
-        "💭 Write about how you feel (optional):",
-        placeholder="e.g., Feeling motivated after gym or a bit tired from studies...",
-    )
-
+    note = st.text_area("💭 Write about how you feel (optional):", placeholder="e.g., Feeling motivated after gym or a bit tired from studies...")
     current_time = datetime.datetime.now().strftime("%I:%M %p")
 
-    # Logging moods
     if happy:
         mood, msg, color = "😊 Happy", "🌞 You’re shining bright today!", "#A3E4D7"
     elif neutral:
@@ -160,16 +142,9 @@ elif page == "Mood Tracker":
 
     if mood:
         new_entry = {"Time": current_time, "Mood": mood, "Note": note}
-        st.session_state.mood_data = pd.concat(
-            [st.session_state.mood_data, pd.DataFrame([new_entry])],
-            ignore_index=True,
-        )
-        st.markdown(
-            f"<div style='background-color:{color}; padding:15px; border-radius:10px; text-align:center; font-size:1.1em; font-weight:500;'>{msg}</div>",
-            unsafe_allow_html=True,
-        )
+        st.session_state.mood_data = pd.concat([st.session_state.mood_data, pd.DataFrame([new_entry])], ignore_index=True)
+        st.markdown(f"<div style='background-color:{color}; padding:15px; border-radius:10px; text-align:center; font-size:1.1em; font-weight:500;'>{msg}</div>", unsafe_allow_html=True)
 
-    # --- Mood Visualization ---
     if not st.session_state.mood_data.empty:
         st.markdown("---")
         st.markdown("<h4 style='text-align:center;'>📈 Your Mood Flow</h4>", unsafe_allow_html=True)
@@ -179,52 +154,42 @@ elif page == "Mood Tracker":
         mood_df = st.session_state.mood_data.copy()
         mood_df["Mood_Value"] = mood_df["Mood"].map(mood_map)
 
-        # Create a smooth mood flow chart
-        fig = px.line(
-            mood_df,
-            x="Time",
-            y="Mood_Value",
-            text="Mood",
-            markers=True,
-            color="Mood",
-            color_discrete_map=color_map,
-            title="Emotional Flow Over Time"
-        )
+        fig = px.line(mood_df, x="Time", y="Mood_Value", text="Mood", markers=True,
+                      color="Mood", color_discrete_map=color_map, title="Emotional Flow Over Time")
 
-        fig.update_traces(
-            textposition="top center",
-            line_shape="spline",
-            line=dict(width=4),
-            marker=dict(size=15, line=dict(width=2, color="white"))
-        )
-
-        fig.update_yaxes(
-            tickvals=[1, 2, 3],
-            ticktext=["☹️ Sad", "😐 Neutral", "😊 Happy"],
-            title="Mood Level"
-        )
-
-        fig.update_layout(
-            xaxis_title="Time Logged",
-            yaxis_title="Mood",
-            template="plotly_white",
-            plot_bgcolor="rgba(245,255,245,0.9)",
-            paper_bgcolor="rgba(255,255,255,0)",
-            font=dict(family="Arial", size=14),
-            title_font=dict(size=20, color="#2E8B57"),
-        )
-
+        fig.update_traces(textposition="top center", line_shape="spline", line=dict(width=4),
+                          marker=dict(size=15, line=dict(width=2, color="white")))
+        fig.update_yaxes(tickvals=[1, 2, 3], ticktext=["☹️ Sad", "😐 Neutral", "😊 Happy"], title="Mood Level")
+        fig.update_layout(xaxis_title="Time Logged", yaxis_title="Mood", template="plotly_white",
+                          plot_bgcolor="rgba(245,255,245,0.9)", paper_bgcolor="rgba(255,255,255,0)",
+                          font=dict(family="Arial", size=14), title_font=dict(size=20, color="#2E8B57"))
         st.plotly_chart(fig, use_container_width=True)
 
-        # --- Display Mood Log ---
+        # --- Mood Summary Section ---
+        st.markdown("---")
+        st.markdown("<h4 style='text-align:center;'>📊 Mood Summary</h4>", unsafe_allow_html=True)
+
+        mood_counts = mood_df["Mood"].value_counts().reset_index()
+        mood_counts.columns = ["Mood", "Count"]
+
+        col1, col2, col3 = st.columns(3)
+        col1.metric("😊 Happy", int(mood_counts[mood_counts["Mood"] == "😊 Happy"]["Count"].sum()))
+        col2.metric("😐 Neutral", int(mood_counts[mood_counts["Mood"] == "😐 Neutral"]["Count"].sum()))
+        col3.metric("☹️ Sad", int(mood_counts[mood_counts["Mood"] == "☹️ Sad"]["Count"].sum()))
+
+        st.markdown("### 🎭 Mood Frequency Chart")
+        fig2 = px.bar(mood_counts, x="Mood", y="Count", color="Mood", color_discrete_map=color_map,
+                      text="Count", title="Number of Times Each Mood Logged")
+        fig2.update_traces(textposition="outside", marker=dict(line=dict(width=2, color="white")),
+                           hovertemplate="<b>%{x}</b><br>Count: %{y}<extra></extra>")
+        fig2.update_layout(xaxis_title="Mood Type", yaxis_title="Count", template="plotly_white",
+                           plot_bgcolor="rgba(245,255,245,0.9)", paper_bgcolor="rgba(255,255,255,0)",
+                           title_font=dict(size=20, color="#2E8B57"))
+        st.plotly_chart(fig2, use_container_width=True)
+
         st.markdown("---")
         st.subheader("🗒️ Mood Journal")
-        st.dataframe(
-            mood_df[["Time", "Mood", "Note"]],
-            use_container_width=True,
-            height=200,
-        )
-
+        st.dataframe(mood_df[["Time", "Mood", "Note"]], use_container_width=True, height=200)
 
 # --- Wellness Tips ---
 elif page == "Wellness Tips":
@@ -278,7 +243,9 @@ elif page == "Paid Sessions":
 
     for t in trainers:
         with st.expander(f"{t['name']} — {t['expertise']}"):
-            st.image(r"https://github.com/Namantyagi18/Project/blob/main/qr%20code.jpg", width=180, caption="Scan this Google Pay QR (₹100)")
+            st.image(r"https://github.com/Namantyagi18/Project/blob/main/qr%20code.jpg", width=180,
+                     caption="Scan this Google Pay QR (₹100)")
             st.write("After payment, contact the facilitator to confirm your session timing.")
             if st.button(f"Contact {t['name']}", key=t['name']):
-                st.info(f"Contact {t['name']} at: +91-XXXXXXXXXX")
+                st.info(f"Contact {t['name']} at: +91-9627216110")
+                st.success("Session booked! Looking forward to helping you relax and rejuvenate. 🌿")
