@@ -19,35 +19,44 @@ page = st.sidebar.radio("Go to", [
 
 
 
-# --- Task Manager ---
+# --- 🕒 Task Manager with Date & Time ---
 if page == "Task Manager":
     st.header("🕒 Task Manager")
-    st.write("Add, track, and complete your daily tasks with motivation!")
+    st.write("Add, track, and complete your daily tasks with motivation and clarity!")
 
-    # Initialize session state
+    # --- Initialize session state ---
     if "tasks" not in st.session_state:
         st.session_state.tasks = []
+    if "last_completed_count" not in st.session_state:
+        st.session_state.last_completed_count = 0
 
-    # --- Add new tasks (multiple support) ---
+    # --- Add new tasks (support multiple lines) ---
     with st.form("task_form", clear_on_submit=True):
         st.markdown("### ✍️ Add New Tasks")
-        new_tasks = st.text_area("Enter one or more tasks (each on a new line):")
+        new_tasks = st.text_area("Enter one or more tasks (each on a new line):", 
+                                 placeholder="Example:\n- Complete biology assignment\n- Call Arjun\n- Go for evening walk")
         add_task = st.form_submit_button("➕ Add Task(s)")
         if add_task and new_tasks.strip():
             task_list = [t.strip() for t in new_tasks.split("\n") if t.strip()]
             for t in task_list:
-                st.session_state.tasks.append({"task": t, "completed": False})
+                st.session_state.tasks.append({
+                    "task": t,
+                    "completed": False,
+                    "date": datetime.date.today().strftime("%d-%m-%Y"),
+                    "time": datetime.datetime.now().strftime("%I:%M %p")
+                })
             st.success(f"✅ Added {len(task_list)} new task(s)!")
 
-    # --- Display tasks ---
+    # --- Display Tasks ---
     if st.session_state.tasks:
-        st.subheader("📋 Your Tasks")
+        st.subheader("📋 Your Task List")
         completed_count = 0
 
         for i, t in enumerate(st.session_state.tasks):
-            cols = st.columns([0.1, 0.7, 0.2])
+            cols = st.columns([0.07, 0.6, 0.33])
             done = cols[0].checkbox("", value=t["completed"], key=f"task_{i}")
-            cols[1].write(f"**{t['task']}**")
+            cols[1].write(f"**{t['task']}**  \n📅 *{t['date']}* | 🕒 *{t['time']}*")
+            
             if done:
                 st.session_state.tasks[i]["completed"] = True
                 cols[2].success("✔️ Completed")
@@ -59,7 +68,7 @@ if page == "Task Manager":
         total_tasks = len(st.session_state.tasks)
         pending_tasks = total_tasks - completed_count
 
-        # --- Motivational feedback ---
+        # --- Motivational Feedback ---
         st.divider()
         if completed_count == 0:
             st.info(f"📝 You have {pending_tasks} pending tasks. Let's get started!")
@@ -69,15 +78,21 @@ if page == "Task Manager":
             st.balloons()
             st.success("🌟 Amazing! You completed all your tasks for today!")
 
-        # --- Optional: Clear all tasks button ---
+        # --- Detect newly completed tasks ---
+        if completed_count > st.session_state.last_completed_count:
+            new_done = completed_count - st.session_state.last_completed_count
+            st.toast(f"🎉 You just completed {new_done} task{'s' if new_done > 1 else ''}!", icon="✅")
+        st.session_state.last_completed_count = completed_count
+
+        # --- Clear All Tasks Button ---
+        st.divider()
         if st.button("🗑️ Clear All Tasks"):
             st.session_state.tasks.clear()
+            st.session_state.last_completed_count = 0
             st.warning("All tasks cleared!")
             st.rerun()
-
     else:
         st.info("No tasks added yet. Add your first task above ⬆️")
-
 
 # --- Mood Tracker ---
 elif page == "Mood Tracker":
