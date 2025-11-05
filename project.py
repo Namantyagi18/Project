@@ -128,19 +128,84 @@ elif page == "Wellness Tips":
     st.markdown("✨ *Wellness begins with awareness — thank yourself for checking in today.* 🌸")
 
 
-# --- Peer Circles ---
+# --- Peer Support Circles (AI Recommendation + Interactive Join System) ---
 elif page == "Peer Support Circles":
     st.header("🤝 Guided Peer Support Circles")
+    st.markdown("✨ Join a circle that fits your current emotional needs or get an AI suggestion based on how you feel 💬")
+
+    # Initialize circles and session data
+    if "joined_circles" not in st.session_state:
+        st.session_state.joined_circles = {}
+    if "circle_members" not in st.session_state:
+        st.session_state.circle_members = {
+            "Stress Support Circle": ["Aarav", "Diya", "Raj"],
+            "Productivity Boosters": ["Ishaan", "Tanya"],
+            "Calm Minds": ["Riya", "Karan", "Ananya"]
+        }
+
+    st.markdown("### 🧠 AI Recommendation")
+    user_feeling = st.text_area("💭 Describe how you feel today:", placeholder="e.g., I feel anxious about exams and deadlines...")
+
+    if st.button("✨ Get Circle Recommendation"):
+        if not user_feeling.strip():
+            st.warning("Please share a few words about how you feel.")
+        else:
+            feeling_lower = user_feeling.lower()
+            if any(word in feeling_lower for word in ["stress", "anxious", "pressure", "exam", "tired"]):
+                rec_circle = "Stress Support Circle"
+                reason = "It seems you're feeling academic or emotional stress. This group focuses on stress relief techniques 🌿."
+            elif any(word in feeling_lower for word in ["focus", "lazy", "motivation", "discipline", "goal"]):
+                rec_circle = "Productivity Boosters"
+                reason = "You're looking to stay consistent and productive. This circle shares focus-building tips 💪."
+            elif any(word in feeling_lower for word in ["peace", "relax", "calm", "meditation", "overthinking"]):
+                rec_circle = "Calm Minds"
+                reason = "You're seeking peace and balance — this group helps with mindfulness and relaxation 🌸."
+            else:
+                rec_circle = "Calm Minds"
+                reason = "You seem in need of calm reflection — Calm Minds could be your safe space 🌿."
+
+            st.success(f"💡 Recommended Circle: **{rec_circle}**")
+            st.info(reason)
+
+    st.markdown("---")
+    st.markdown("### 🌼 Explore and Join Circles")
+
     circles = [
-        {"name": "Stress Support Circle", "members": 12, "topic": "Managing academic stress"},
-        {"name": "Productivity Boosters", "members": 9, "topic": "Focus and motivation"},
-        {"name": "Calm Minds", "members": 15, "topic": "Mindfulness and relaxation"}
+        {"name": "Stress Support Circle", "topic": "Managing academic and emotional stress"},
+        {"name": "Productivity Boosters", "topic": "Staying focused, avoiding burnout"},
+        {"name": "Calm Minds", "topic": "Mindfulness, relaxation, and balance"}
     ]
+
     for c in circles:
-        with st.expander(f"{c['name']} ({c['members']} members)"):
+        members = st.session_state.circle_members.get(c["name"], [])
+        with st.expander(f"{c['name']} ({len(members)} members)"):
             st.write(f"**Topic:** {c['topic']}")
-            if st.button(f"Join {c['name']}", key=c['name']):
-                st.success(f"You have joined {c['name']}!")
+            st.write("👥 **Members:** " + ", ".join(members))
+
+            name = st.text_input(f"Enter your name to join {c['name']}:", key=f"name_{c['name']}")
+            if st.button(f"Join {c['name']}", key=f"join_{c['name']}"):
+                if not name.strip():
+                    st.warning("Please enter your name before joining.")
+                elif name in members:
+                    st.info(f"✅ {name}, you’re already part of this circle!")
+                else:
+                    st.session_state.circle_members[c["name"]].append(name)
+                    st.session_state.joined_circles[name] = c["name"]
+                    st.success(f"🎉 Welcome {name}! You’ve joined **{c['name']}** 🌿")
+
+    st.markdown("---")
+    st.markdown("### 💫 Your Joined Circles")
+
+    if st.session_state.joined_circles:
+        user_names = list(st.session_state.joined_circles.keys())
+        joined_groups = [st.session_state.joined_circles[n] for n in user_names]
+        joined_df = pd.DataFrame({"Member": user_names, "Circle": joined_groups})
+        st.dataframe(joined_df, use_container_width=True, height=150)
+    else:
+        st.info("You haven’t joined any circles yet. Join one to start connecting 💬")
+
+    st.markdown("---")
+    st.markdown("🌻 *Remember: you grow faster when you grow together.* 🌻")
 
 # --- Stress Relief Plans ---
 elif page == "Stress Relief Plans":
