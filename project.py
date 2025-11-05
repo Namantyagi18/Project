@@ -325,6 +325,6 @@ elif page == "Paid Sessions":
 
     for t in trainers:
         with st.expander(f"{t['name']} — {t['expertise']}"):
-            st.image("C:/Users/Naman/Desktop/Project/qr code.jpg", width=180, caption="Scan this Google Pay QR (₹100)")
+            st.image("https://github.com/Namantyagi18/Project/blob/main/qr%20code.jpg", width=180, caption="Scan this Google Pay QR (₹100)")
             st.write("After payment, contact the facilitator to confirm your session.")
             st.success(f"📞 Contact {t['name']} at: +91-XXXXXXXXXX")
