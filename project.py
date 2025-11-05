@@ -2,41 +2,34 @@ import streamlit as st
 import pandas as pd
 import datetime
 
-# Page config
 st.set_page_config(page_title="Digital Wellness Toolkit", page_icon="🌱", layout="wide")
 
-# Title
 st.title("🌱 Digital Wellness Toolkit")
 st.markdown("#### The Silent Struggle — Manage stress, track mood, and connect with support circles.")
 
-# Sidebar navigation
+# Sidebar Navigation
 st.sidebar.title("🧭 Navigation")
-page = st.sidebar.radio(
-    "Go to",
-    [
-        "Task Manager",
-        "Mood Tracker",
-        "Wellness Tips",
-        "Peer Support Circles",
-        "Stress Relief Plans",
-        "Paid Sessions",
-    ],
-    key="main_nav"
-)
+page = st.sidebar.radio("Go to", [
+    "Task Manager",
+    "Mood Tracker",
+    "Wellness Tips",
+    "Peer Support Circles",
+    "Stress Relief Plans",
+    "Paid Sessions"
+])
 
-# ===============================================================
-# 🕒 TASK MANAGER
-# ===============================================================
+# --- Task Manager ---
 if page == "Task Manager":
     st.header("🕒 Task Manager")
     st.write("Add, track, and complete your daily tasks with motivation!")
 
+    # Initialize session state
     if "tasks" not in st.session_state:
         st.session_state.tasks = []
     if "last_completed_count" not in st.session_state:
         st.session_state.last_completed_count = 0
 
-    # Add new tasks
+    # --- Add new tasks (multiple support) ---
     with st.form("task_form", clear_on_submit=True):
         st.markdown("### ✍️ Add New Tasks")
         new_tasks = st.text_area("Enter one or more tasks (each on a new line):")
@@ -52,12 +45,13 @@ if page == "Task Manager":
                 })
             st.success(f"✅ Added {len(task_list)} new task(s)!")
 
-    # Display tasks
+    # --- Display tasks ---
     if st.session_state.tasks:
         st.subheader("📋 Your Tasks")
         completed_count = 0
+
         for i, t in enumerate(st.session_state.tasks):
-            cols = st.columns([0.07, 0.6, 0.33])
+            cols = st.columns([0.07, 0.63, 0.3])
             done = cols[0].checkbox("", value=t["completed"], key=f"task_{i}")
             cols[1].write(f"**{t['task']}**  \n📅 *{t['date']}* | 🕒 *{t['time']}*")
             if done:
@@ -71,6 +65,13 @@ if page == "Task Manager":
         total_tasks = len(st.session_state.tasks)
         pending_tasks = total_tasks - completed_count
 
+        # --- Detect newly completed tasks ---
+        if completed_count > st.session_state.last_completed_count:
+            new_done = completed_count - st.session_state.last_completed_count
+            st.success(f"🎉 Great! You completed {new_done} task{'s' if new_done > 1 else ''}!")
+        st.session_state.last_completed_count = completed_count
+
+        # --- Motivational feedback ---
         st.divider()
         if completed_count == 0:
             st.info(f"📝 You have {pending_tasks} pending tasks. Let's get started!")
@@ -80,10 +81,7 @@ if page == "Task Manager":
             st.balloons()
             st.success("🌟 Amazing! You completed all your tasks for today!")
 
-        if completed_count > st.session_state.last_completed_count:
-            st.toast(f"🎉 You just completed {completed_count - st.session_state.last_completed_count} task(s)!", icon="✅")
-        st.session_state.last_completed_count = completed_count
-
+        # --- Clear all tasks button ---
         if st.button("🗑️ Clear All Tasks"):
             st.session_state.tasks.clear()
             st.session_state.last_completed_count = 0
@@ -92,228 +90,66 @@ if page == "Task Manager":
     else:
         st.info("No tasks added yet. Add your first task above ⬆️")
 
-# ===============================================================
-# 😊 MOOD TRACKER
-# ===============================================================
+# --- Mood Tracker ---
 elif page == "Mood Tracker":
     st.header("😊 Mood Tracker")
-    st.write("Log your mood and track your emotional trends over time.")
-
+    st.write("Log your current mood and view trends.")
     if "mood_data" not in st.session_state:
         st.session_state.mood_data = pd.DataFrame(columns=["Time", "Mood"])
 
-    mood = st.radio("Select your mood:", ["😊 Happy", "😐 Neutral", "☹️ Sad"], horizontal=True)
+    mood = st.radio("Select your current mood:", ["😊 Happy", "😐 Neutral", "☹️ Sad"], horizontal=True)
     if st.button("Log Mood"):
         new_entry = {"Time": datetime.datetime.now().strftime("%H:%M:%S"), "Mood": mood}
-        st.session_state.mood_data = pd.concat([st.session_state.mood_data, pd.DataFrame([new_entry])], ignore_index=True)
+        st.session_state.mood_data = pd.concat(
+            [st.session_state.mood_data, pd.DataFrame([new_entry])],
+            ignore_index=True
+        )
         st.success("Mood logged successfully!")
 
     if not st.session_state.mood_data.empty:
         st.line_chart(st.session_state.mood_data["Mood"].map({"😊 Happy": 3, "😐 Neutral": 2, "☹️ Sad": 1}))
 
-# ===============================================================
-# 💬 EMOTION-AWARE WELLNESS TIPS
-# ===============================================================
+# --- Wellness Tips ---
 elif page == "Wellness Tips":
-    st.header("💬 Emotion-Aware Wellness Assistant")
-    st.write("Express your emotions — get personalized wellness advice 🌿")
+    st.header("💬 Wellness Tips")
+    tips = [
+        "Take a short walk and stretch. 🚶‍♀️",
+        "Remember to breathe deeply for a minute. 🌬️",
+        "Organize your tasks one at a time. ✅",
+        "Unplug for 10 minutes. 🌿",
+        "Smile! You’re doing great. 😊"
+    ]
+    st.info(f"✨ {tips[pd.Timestamp.now().second % len(tips)]}")
 
-    emotion_text = st.text_area("💭 How do you feel today?")
-    if st.button("💡 Get My Wellness Tip"):
-        if not emotion_text.strip():
-            st.warning("Please share your feelings first 💬")
-        else:
-            text = emotion_text.lower()
-            mood = "neutral"
-            if any(w in text for w in ["happy", "excited", "grateful"]):
-                mood = "happy"
-            elif any(w in text for w in ["sad", "tired", "anxious", "stressed"]):
-                mood = "sad"
-
-            if mood == "happy":
-                st.success("🌞 You’re glowing! Keep spreading positivity. Maybe share a smile or do something kind today.")
-            elif mood == "sad":
-                st.info("💖 Take a break, breathe, and treat yourself gently. A short walk or journaling can help.")
-            else:
-                st.info("🌿 Stay grounded — maybe listen to soft music or make tea and take a mindful pause.")
-
-# ===============================================================
-# 🤝 PEER SUPPORT CIRCLES
-# ===============================================================
+# --- Peer Support Circles ---
 elif page == "Peer Support Circles":
     st.header("🤝 Guided Peer Support Circles")
-    st.markdown("Join a group that fits your current emotional need 🌱")
+    circles = [
+        {"name": "Stress Support Circle", "members": 12, "topic": "Managing academic stress"},
+        {"name": "Productivity Boosters", "members": 9, "topic": "Focus and motivation"},
+        {"name": "Calm Minds", "members": 15, "topic": "Mindfulness and relaxation"}
+    ]
+    for c in circles:
+        with st.expander(f"{c['name']} ({c['members']} members)"):
+            st.write(f"**Topic:** {c['topic']}")
+            if st.button(f"Join {c['name']}", key=c['name']):
+                st.success(f"You have joined {c['name']}!")
 
-    circles = {
-        "Stress Support Circle": ["Aarav", "Diya", "Raj"],
-        "Productivity Boosters": ["Ishaan", "Tanya"],
-        "Calm Minds": ["Riya", "Karan", "Ananya"]
-    }
-
-    st.subheader("✨ Describe your current feeling for a recommendation")
-    feeling = st.text_area("💭 How are you feeling right now?")
-    if st.button("🎯 Recommend a Circle"):
-        if not feeling.strip():
-            st.warning("Please describe how you feel.")
-        else:
-            f = feeling.lower()
-            if "stress" in f or "tired" in f:
-                st.success("💡 You should join **Stress Support Circle** 🌿")
-            elif "motivation" in f or "focus" in f:
-                st.success("💡 You should join **Productivity Boosters** 💪")
-            else:
-                st.success("💡 You might like **Calm Minds** for peace and mindfulness 🧘")
-
-    st.markdown("---")
-    for name, members in circles.items():
-        with st.expander(f"{name} ({len(members)} members)"):
-            st.write("👥 Members:", ", ".join(members))
-            join_name = st.text_input(f"Enter your name to join {name}:", key=name)
-            if st.button(f"Join {name}", key=f"join_{name}"):
-                if join_name and join_name not in members:
-                    circles[name].append(join_name)
-                    st.success(f"🎉 {join_name}, welcome to {name}!")
-                else:
-                    st.warning("Please enter a valid name or you’re already in this circle.")
-
-# ===============================================================
-# 💖 AI-POWERED STRESS RELIEF PLANNER
-# ===============================================================
+# --- Stress Relief Plans ---
 elif page == "Stress Relief Plans":
-    st.header("💖 AI Stress Relief Planner")
-    st.write("✨ Get a personalized, actionable plan — whether it’s time, money, study, or emotional stress 🌿")
+    st.header("💖 Personalized Stress Relief Plans")
+    current_mood = st.radio("How are you feeling today?", ["😊 Happy", "😐 Neutral", "☹️ Sad"], horizontal=True)
+    plans = {
+        "😊 Happy": "Keep journaling and stay active! Maintain your positive energy by sharing gratitude notes. 🌞",
+        "😐 Neutral": "Try a guided meditation or short breathing session to refresh your mind. 🌿",
+        "☹️ Sad": "Listen to calm music, connect with friends, or journal your thoughts. Take small self-care steps. 💖"
+    }
+    st.success(plans[current_mood])
 
-    user_stress = st.text_input("💭 What’s stressing you out today?",
-                                placeholder="e.g., time management, money problems, study pressure...")
-
-    if user_stress:
-        user_stress_lower = user_stress.lower()
-
-        # Detect stress type
-        if "time" in user_stress_lower:
-            stress_type = "time_management"
-            st.info("🕒 Detected stress type: Time Management")
-        elif "money" in user_stress_lower or "finance" in user_stress_lower:
-            stress_type = "money_management"
-            st.info("💰 Detected stress type: Money Management")
-        elif "study" in user_stress_lower or "exam" in user_stress_lower:
-            stress_type = "study_stress"
-            st.info("📚 Detected stress type: Study Stress")
-        elif "relationship" in user_stress_lower or "family" in user_stress_lower:
-            stress_type = "emotional_stress"
-            st.info("💞 Detected stress type: Emotional Stress")
-        else:
-            stress_type = "general"
-            st.info("🌿 Detected stress type: General Stress")
-
-        st.divider()
-
-        # --- TIME MANAGEMENT PLAN ---
-        if stress_type == "time_management":
-            st.subheader("🕒 Build Your Day Plan")
-
-            hours = st.number_input("How many hours do you have today?", 1, 24, 10)
-            activities = st.text_area("List your activities (one per line):",
-                                      placeholder="e.g.\nStudy\nGym\nAssignments\nRelax\nDinner")
-            if st.button("✨ Generate My Time Schedule"):
-                if activities.strip():
-                    activity_list = [a.strip() for a in activities.split("\n") if a.strip()]
-                    priority = st.selectbox("Which is your top priority?", activity_list)
-                    time_per_activity = round(hours / len(activity_list), 1)
-
-                    plan = pd.DataFrame({
-                        "Activity": activity_list,
-                        "Allocated Time (hrs)": [time_per_activity] * len(activity_list),
-                        "Priority": ["⭐" if a == priority else "" for a in activity_list]
-                    })
-
-                    st.success("✅ Here's your balanced day plan:")
-                    st.dataframe(plan, use_container_width=True)
-
-                    csv = plan.to_csv(index=False).encode('utf-8')
-                    st.download_button("📥 Download Plan as CSV", csv, "day_plan.csv", "text/csv")
-
-        # --- MONEY MANAGEMENT PLAN ---
-        elif stress_type == "money_management":
-            st.subheader("💰 Build Your Budget Plan")
-
-            income = st.number_input("Enter your monthly income (₹):", min_value=0, step=1000)
-            essentials = st.slider("Essentials (rent, food, bills) %", 0, 100, 50)
-            savings = st.slider("Savings & Investments %", 0, 100, 20)
-            leisure = st.slider("Leisure & Others %", 0, 100, 15)
-
-            if st.button("✨ Generate My Budget Plan"):
-                other = 100 - (essentials + savings + leisure)
-                budget = pd.DataFrame({
-                    "Category": ["Essentials", "Savings", "Leisure", "Others"],
-                    "Percentage": [essentials, savings, leisure, other],
-                    "Amount (₹)": [
-                        income * essentials / 100,
-                        income * savings / 100,
-                        income * leisure / 100,
-                        income * other / 100
-                    ]
-                })
-
-                st.success("💡 Here’s your smart budget distribution:")
-                st.dataframe(budget, use_container_width=True)
-
-                csv = budget.to_csv(index=False).encode('utf-8')
-                st.download_button("📥 Download Budget as CSV", csv, "budget_plan.csv", "text/csv")
-
-        # --- STUDY STRESS PLAN ---
-        elif stress_type == "study_stress":
-            st.subheader("📚 Study Focus Plan")
-
-            total_hours = st.number_input("Total study hours available today:", 1, 24, 6)
-            subjects = st.text_area("Enter subjects or topics (one per line):",
-                                    placeholder="e.g.\nMath\nPhysics\nCoding")
-            if st.button("🧠 Generate Study Schedule"):
-                if subjects.strip():
-                    subject_list = [s.strip() for s in subjects.split("\n") if s.strip()]
-                    per_subject = round(total_hours / len(subject_list), 1)
-
-                    plan = pd.DataFrame({
-                        "Subject": subject_list,
-                        "Study Time (hrs)": [per_subject] * len(subject_list)
-                    })
-
-                    st.success("✅ Here’s your structured study plan:")
-                    st.dataframe(plan, use_container_width=True)
-
-                    csv = plan.to_csv(index=False).encode('utf-8')
-                    st.download_button("📥 Download Study Plan", csv, "study_plan.csv", "text/csv")
-
-        # --- EMOTIONAL STRESS PLAN ---
-        elif stress_type == "emotional_stress":
-            st.subheader("💞 Emotional Balance Plan")
-
-            st.markdown("""
-                - 🌤️ Start your day with 10 minutes of deep breathing  
-                - ✍️ Journal 3 thoughts or feelings without judgment  
-                - ☎️ Talk to one trusted person  
-                - 🌿 Go for a 15-minute walk without your phone  
-                - 💤 Sleep at least 7 hours tonight  
-            """)
-            st.info("💖 Remember: expressing emotions is a sign of strength, not weakness.")
-
-        # --- GENERAL PLAN ---
-        else:
-            st.subheader("🌿 General Stress Relief Plan")
-            st.markdown("""
-                - 🧘 Take a 5-minute break and breathe deeply  
-                - 📅 Write 3 simple tasks for today and finish one first  
-                - ☕ Have water or tea mindfully  
-                - 🎧 Play calming music for 10 minutes  
-                - ✨ Write one thing you’re grateful for today  
-            """)
-
-# ===============================================================
-# 💼 PAID SESSIONS
-# ===============================================================
+# --- Paid Sessions ---
 elif page == "Paid Sessions":
     st.header("💼 Paid Stress-Relief Sessions (₹100)")
-    st.write("Book a 1-on-1 guided session. Pay via QR below 👇")
+    st.write("Book a 1-on-1 guided stress relief session with one of our facilitators. Payment through Google Pay QR below 👇")
 
     trainers = [
         {"name": "Naman", "expertise": "Stress Management & Positive Mindset"},
@@ -325,6 +161,11 @@ elif page == "Paid Sessions":
 
     for t in trainers:
         with st.expander(f"{t['name']} — {t['expertise']}"):
-            st.image("https://github.com/Namantyagi18/Project/blob/main/qr%20code.jpg", width=180, caption="Scan this Google Pay QR (₹100)")
-            st.write("After payment, contact the facilitator to confirm your session.")
-            st.success(f"📞 Contact {t['name']} at: +91-XXXXXXXXXX")
+            st.image("https://raw.githubusercontent.com/Namantyagi18/Project/main/qr%20code.jpg", 
+         width=180, 
+         caption="Scan this Google Pay QR (₹100)")
+
+            st.write("After payment, contact the facilitator to confirm your session timing.")
+            if st.button(f"Contact {t['name']}", key=t['name']):
+                st.info(f"Contact {t['name']} at: +91-XXXXXXXXXX")
+                st.success("Session booked! Looking forward to helping you relax and rejuvenate. 🌿")      
