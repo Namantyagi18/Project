@@ -89,10 +89,11 @@ if page == "Task Manager":
 elif page == "Mood Tracker":
 
     # 🌈 Stylish background + button CSS
-    st.markdown("""
+    st.markdown(
+        """
         <style>
-        body {
-            background: linear-gradient(135deg, #d4fc79 0%, #96e6a1 100%);
+        html, body, [class*="stAppViewContainer"], [class*="main"] {
+            background: linear-gradient(135deg, #d4fc79 0%, #96e6a1 100%) !important;
         }
         .stButton>button {
             border-radius: 15px;
@@ -111,7 +112,9 @@ elif page == "Mood Tracker":
             box-shadow: 0px 6px 14px rgba(0,0,0,0.3);
         }
         </style>
-    """, unsafe_allow_html=True)
+        """,
+        unsafe_allow_html=True
+    )
 
     st.markdown("<h2 style='text-align:center; color:#006400;'>🧘 Mood Tracker</h2>", unsafe_allow_html=True)
     st.markdown("<p style='text-align:center;'>Log your daily emotions and visualize your inner journey 🌿</p>", unsafe_allow_html=True)
@@ -243,8 +246,11 @@ elif page == "Paid Sessions":
 
     for t in trainers:
         with st.expander(f"{t['name']} — {t['expertise']}"):
-            st.image(r"https://github.com/Namantyagi18/Project/blob/main/qr%20code.jpg", width=180,
-                     caption="Scan this Google Pay QR (₹100)")
+            st.image(
+                r"https://github.com/Namantyagi18/Project/blob/main/qr%20code.jpg",
+                width=180,
+                caption="Scan this Google Pay QR (₹100)"
+            )
             st.write("After payment, contact the facilitator to confirm your session timing.")
             if st.button(f"Contact {t['name']}", key=t['name']):
                 st.info(f"Contact {t['name']} at: +91-9627216110")
