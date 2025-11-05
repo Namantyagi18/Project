@@ -322,7 +322,7 @@ elif page == "Paid Sessions":
     """)
 
     # QR image URL (raw GitHub version)
-    qr_url = "https://raw.githubusercontent.com/Namantyagi18/Project/main/qr%20code.jpg"
+    qr_url = "https://github.com/Namantyagi18/Project/blob/main/qr%20code%202.jpg"
 
     # Facilitator profiles
     trainers = [
